@@ -1,6 +1,3 @@
-
-
-
 const notifier = require('node-notifier');
 //save history in document 
 
@@ -51,7 +48,7 @@ const  workTimer = async (sessionLength, target, interval) =>{
       console.log(timer)
   
   
-      if(minutes == sessionLength && seconds == 0){
+      if(seconds == sessionLength){
         clearInterval(countDown)
         resolve(`Session ${interval} Over`)
         return true
@@ -94,20 +91,20 @@ const breakTimer = async (breakInterval, target, interval) => {
 
 }
 
-const showNotification = (title, message) =>{
+const showNotification = (title, message, sound) =>{
      // Create a notification
      notifier.notify({
        title: title,
        message: message,
        // Optional: Customize appearance
-       sound: 'Funk',
+       sound: sound,
        wait: true // Wait for user to close the notification
      });
-    }
+}
 
 const main = async () => {
   const breakLength = await askQuestion('Enter break length: ')
-  const breakInterval = await askQuestion('Enter break minutes: ')
+  const breakInterval = await askQuestion('Enter break sec: ')
   const sessionLength = await askQuestion('Enter session length: ')
   
   readInput.close();
@@ -116,15 +113,26 @@ const main = async () => {
   let target = new Date()
 
   for(let interval  = 0; interval < breakLength; interval++){
-    showNotification('Work Time', `Session ${interval+1} Started`) 
+    showNotification('Work Time', `Session ${interval+1} Started`, 'Funk') 
     let time = await workTimer(sessionLength, target, interval+1) // call the work timer function
     console.log(time)
 
+
     target = new Date() // update target by current time
-    showNotification('Break Time', `Break ${interval+1} Started`) 
-    let breakTime = await breakTimer(breakInterval, target, interval+1) // call the break timer function
-    console.log(breakTime)
+
+
+    if(interval+1 != breakLength){
+      
+      showNotification('Break Time', `Break ${interval+1} Started`, 'Basso') 
+      let breakTime = await breakTimer(breakInterval, target, interval+1) // call the break timer function
+      console.log(breakTime)
+    }
+
+    target = new Date() // update target by current time
   }
+
+
+  showNotification('Congratulations','Session Completed', 'Hero')  //final notification
 
   
   
