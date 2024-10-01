@@ -1,4 +1,5 @@
 const notifier = require('node-notifier');
+const fs = require('fs');
 const { resolve } = require('path');
 //save history in document 
 
@@ -11,15 +12,29 @@ const readInput = readline.createInterface({
   });
 
 
-  const displayQuestion = (query) => {
+const addHistory = (data) =>{
+    fs.appendFile('history.txt', data, function (err) {
+      if (err) throw err;
+    });
+}
+
+const showHistory = () =>{
+  fs.readFile('history.txt', 'utf8', function (err, data) {
+    if (err) throw err;
+    console.log(data);
+    displayMenu()
+  });
+}
+
+const displayQuestion = (query) => {
     return new Promise((resolve, reject) => {
       readInput.question(query, (answer) => {
         resolve(answer);
       })
     })
-  }
+}
   
-  const askQuestion = async (question) =>{
+const askQuestion = async (question) =>{
     let input = await displayQuestion(question)
   
     if(input < 1 || isNaN(input)) {
@@ -29,10 +44,9 @@ const readInput = readline.createInterface({
       return input
     }
   
-  }
+}
 
 const displayMenu = async() =>{
-  console.clear()
   console.log("1. Start Pomodoro")
   console.log("2. History")
   console.log("3. Exit")
@@ -40,6 +54,15 @@ const displayMenu = async() =>{
 
   if(input == 1){
     pomodoroMenu()
+  }else if(input == 2){
+    showHistory()
+  }
+  else if(input == 3){
+    process.exit()
+  }else{
+    console.clear()
+    console.log("Please Enter valid input!")
+    displayMenu()
   }
 }
 
@@ -87,6 +110,8 @@ const preTimer = async(message) =>{
 
 const  workTimer = async (sessionLength, interval) =>{
   showNotification('Work Time', `Session ${interval} start soon`, 'Funk') 
+
+  addHistory(`Work Time Session ${interval} for ${sessionLength} sec at : ${new Date()}\n` ) // add history for working time
   let preTime = await preTimer('Working time stating in ....')
 
   if(preTime){
@@ -123,6 +148,7 @@ const  workTimer = async (sessionLength, interval) =>{
 
 const breakTimer = async (breakInterval, interval) => {
   showNotification('Break Time', `Break ${interval} start soon`, 'Basso') 
+  addHistory(`Break Time Session ${interval} for ${breakInterval} sec at : ${new Date()}\n` ) // add history for break time
   let preTime = await preTimer('Break time stating in ....')
 
   return new Promise((resolve, reject) => {
