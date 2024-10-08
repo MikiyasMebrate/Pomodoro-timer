@@ -34,7 +34,7 @@ const askQuestion = async (question) =>{
     let input = await displayQuestion(question)
   
     if(input < 1 || isNaN(input)) {
-      console.log("Please enter valid !")
+      console.log("Please enter valid Input !")
       return askQuestion(question)
     }else{
       return input
@@ -67,7 +67,7 @@ const pomodoroMenu = async () =>{
   const breakInterval = await askQuestion('Enter break sec: ')
   const sessionLength = await askQuestion('Enter session length: ')
   
-  readInput.close();
+ 
 
 
   for(let interval  = 0; interval < breakLength; interval++){
@@ -83,28 +83,33 @@ const pomodoroMenu = async () =>{
 
 
   showNotification('Congratulations','Session Completed', 'Hero')  //final notification
+  readInput.close();
 }
 
-const preTimer = async(message) =>{
-  return new Promise((resolve, reject) => {
-    let sec = 5
-    const timer = setInterval(()=>{
-      console.clear()
-      console.log(`${message} ${sec}`)
-      sec--;
-      if(sec == 0){
-        clearInterval(timer)
-        resolve(true)
-      }
-    },1000)
-  })
+const preTimer = async(title,message) =>{
+  console.log(title + " =  Press 'any number' to Start Timer")
+  const input = await askQuestion('Enter Options: ')
+  if(input){
+    return new Promise((resolve, reject) => {
+      let sec = 5
+      const timer = setInterval(()=>{
+        console.clear()
+        console.log(`${message} ${sec}`)
+        sec--;
+        if(sec == 0){
+          clearInterval(timer)
+          resolve(true)
+        }
+      },1000)
+    })
+  }
 }
 
-const  workTimer = async (sessionLength, interval) =>{
+const workTimer = async (sessionLength, interval) =>{
   showNotification('Work Time', `Session ${interval} start soon`, 'Funk') 
 
   addHistory(`Work Time Session ${interval} for ${sessionLength} sec at : ${new Date()}\n` ) // add history for working time
-  let preTime = await preTimer('Working time stating in ....')
+  let preTime = await preTimer('Work Time','Working time stating in ....' )
 
   if(preTime){
     return new Promise((resolve, reject) => {
@@ -140,12 +145,12 @@ const  workTimer = async (sessionLength, interval) =>{
 const breakTimer = async (breakInterval, interval) => {
   showNotification('Break Time', `Break ${interval} start soon`, 'Basso') 
   addHistory(`Break Time Session ${interval} for ${breakInterval} sec at : ${new Date()}\n` ) // add history for break time
-  let preTime = await preTimer('Break time stating in ....')
+  let preTime = await preTimer('Break Time', 'Break time stating in ....')
 
   return new Promise((resolve, reject) => {
     
     let startTime = new Date();
-  let countDown = setInterval(() => {
+    let countDown = setInterval(() => {
     let current = new Date();
     const diff = current - startTime;
 
