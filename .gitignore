@@ -139,4 +139,4 @@ dist
 .svelte-kit
 
 #report 
-.history
+history.txt
