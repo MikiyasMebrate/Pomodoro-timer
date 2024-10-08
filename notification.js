@@ -1,16 +1,12 @@
 const notifier = require('node-notifier');
 const fs = require('fs');
-const { resolve } = require('path');
 //save history in document 
-
-
 
 const readline = require('readline');
 const readInput = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
-
 
 const addHistory = (data) =>{
     fs.appendFile('history.txt', data, function (err) {
@@ -66,7 +62,6 @@ const displayMenu = async() =>{
   }
 }
 
-
 const pomodoroMenu = async () =>{
   const breakLength = await askQuestion('Enter break length: ')
   const breakInterval = await askQuestion('Enter break sec: ')
@@ -90,8 +85,6 @@ const pomodoroMenu = async () =>{
   showNotification('Congratulations','Session Completed', 'Hero')  //final notification
 }
 
-
-
 const preTimer = async(message) =>{
   return new Promise((resolve, reject) => {
     let sec = 5
@@ -106,7 +99,6 @@ const preTimer = async(message) =>{
     },1000)
   })
 }
-
 
 const  workTimer = async (sessionLength, interval) =>{
   showNotification('Work Time', `Session ${interval} start soon`, 'Funk') 
@@ -144,7 +136,6 @@ const  workTimer = async (sessionLength, interval) =>{
   }
 
 }
-
 
 const breakTimer = async (breakInterval, interval) => {
   showNotification('Break Time', `Break ${interval} start soon`, 'Basso') 
