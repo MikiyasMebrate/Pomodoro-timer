@@ -193,11 +193,6 @@ const showNotification = (title, message, sound) =>{
 
 const main = async () => {
   displayMenu()
-
-  
-
-
 }
-
 
 main()
