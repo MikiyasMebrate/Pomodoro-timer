@@ -1,11 +1,20 @@
 const readline = require("readline");
+const fs = require('fs');
+const notifier = require('node-notifier');
+
+
+//configuration
+const timerCounter = 10
+const history = []
+
+
 // Create interface for input and output
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-const countDown = async (minutes, secondCounter = 1000) => {
+const countDown = async (minutes, secondCounter = timerCounter) => {
   let timeLeft = minutes * 60; // Convert minutes to seconds
   let isPaused = false; // Track pause state
   let remainingTime = timeLeft; // Store remaining time when paused
@@ -97,6 +106,15 @@ const handleMenuSelection = (option) => {
   }
 };
 
+// Function to show a notification
+const showNotification = (message) => {
+  notifier.notify({
+    title: 'Pomodoro Timer',
+    message: message,
+    sound: true,
+  });
+};
+
 // Function to simulate starting Pomodoro
 const startPomodoro = () => {
   console.log("Pomodoro started! (Press Ctrl + C to stop)\n");
@@ -104,9 +122,28 @@ const startPomodoro = () => {
   askPomodoroSettings();
 };
 
-// Function to display history
+// Function to display the history as a table
 const displayHistory = () => {
-  console.log("Here is your history:");
+  fs.readFile('pomodoro_history.json', 'utf8', (err, data) => {
+      if (err) {
+          console.error('Error reading history file:', err);
+          return;
+      }
+
+      const historyData = JSON.parse(data); // Parse the JSON file
+      console.table(historyData); // Display the history as a table
+  });
+};
+
+// Function to log the history of a work session or break
+const logHistory = (type, interval, duration) => {
+  const timestamp = new Date().toISOString();
+  history.push({
+      type: type, // 'work' or 'break'
+      interval: interval,
+      duration: duration, // in minutes
+      timestamp: timestamp
+  });
 };
 
 // Function to ask user for Pomodoro settings
@@ -186,16 +223,23 @@ const waitForUser = () => {
   });
 };
 
+// Function to save history as a JSON file
+const saveHistoryAsJSON = () => {
+  const historyJSON = JSON.stringify(history, null, 2);
+  fs.writeFile('pomodoro_history.json', historyJSON, (err) => {
+      if (err) {
+          console.error('Error saving history:', err);
+      } else {
+          console.log('Pomodoro history saved as "pomodoro_history.json"');
+      }
+  });
+};
+
 // Async function to start the work time
 const startWorkTime = async (settings) => {
-  console.clear();
   console.log("Starting your work sessions...\n");
 
-  for (
-    let interval = 0;
-    interval < settings.intervalsBeforeLongBreak;
-    interval++
-  ) {
+  for ( let interval = 0; interval < settings.intervalsBeforeLongBreak; interval++) {
     console.log(`Press Space to pause and resume the timer.`);
     await waitForUser(); // Wait for the user to press Enter
     console.log(
@@ -205,24 +249,39 @@ const startWorkTime = async (settings) => {
     );
     await countDown(settings.workTime); // Wait for the countdown to finish
 
+    logHistory('work', interval + 1, settings.workTime); // Log the work session
+
+    showNotification(`Work session ${interval + 1} completed. Time for a break!\n`)
     console.log(`Work session ${interval + 1} completed. Time for a break!\n`);
 
     if (interval < settings.intervalsBeforeLongBreak - 1) {
       await waitForUser(); // Wait for the user to press Enter before the break
       console.log(`Starting short break for ${settings.breakTime} minutes...`);
       await countDown(settings.breakTime); // Countdown for break time
+
+      logHistory('break', interval + 1, settings.breakTime); // Log the break session
+
+      showNotification(`Break time is over. Starting next work session...\n`)
       console.log(`Break time is over. Starting next work session...\n`);
     }
   }
 
+  showNotification(`All ${settings.intervalsBeforeLongBreak} work sessions completed! Time for a long break of ${settings.longBreakTime} minutes.`)
   // After completing all intervals, take a long break
-  console.log(
-    `All ${settings.intervalsBeforeLongBreak} work sessions completed! Time for a long break of ${settings.longBreakTime} minutes.`
-  );
+  console.log( `All ${settings.intervalsBeforeLongBreak} work sessions completed! Time for a long break of ${settings.longBreakTime} minutes.`);
   await waitForUser(); // Wait for the user to press Enter before the long break
-  await countDown(settings.longBreakTime, 1); // Countdown for long break
+
+  await countDown(settings.longBreakTime); // Countdown for long break
+  logHistory('long break', settings.intervalsBeforeLongBreak, settings.longBreakTime); // Log the long break session
+
+  showNotification("Long break is over. Great job!")
   console.log("Long break is over. Great job!");
+
   displayMenu();
+
+
+   // Save the history as a JSON file after all sessions are complete
+  saveHistoryAsJSON();
 };
 
 // Start the interactive menu
